@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -16,7 +17,10 @@ public class LinkValidatorAsync {
     private static HttpClient httpClient;
 
     public static void main(String[] args) throws IOException {
-        httpClient = HttpClient.newHttpClient();
+        httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
 
         List<CompletableFuture<String>> futures = Files.lines(Path.of("urls.txt"))
                 .map(LinkValidatorAsync::validateLink)
@@ -29,6 +33,7 @@ public class LinkValidatorAsync {
 
     private static CompletableFuture<String> validateLink(String link) {
         HttpRequest httpRequest = HttpRequest.newBuilder(URI.create(link))
+                .timeout(Duration.ofSeconds(3))
                 .GET()
                 .build();
 
